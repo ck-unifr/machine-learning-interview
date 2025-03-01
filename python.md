@@ -470,6 +470,132 @@ print(a is b)  # True
 
 ---
 
+### `*args` 和 `**kwargs`
+
+在 Python 中，`*args` 和 `**kwargs` 是处理函数参数的强大工具，允许函数接受任意数量的参数。它们的具体作用和用法如下：
+
+---
+
+### **1. `*args`：接收任意数量的「位置参数」**
+- **作用**：将传入的多个位置参数打包成一个**元组**。
+- **适用场景**：当函数需要处理不确定数量的参数时（比如求和、拼接等）。
+
+#### **例子 1：基本用法**
+```python
+def sum_numbers(*args):
+    total = 0
+    for num in args:
+        total += num
+    return total
+
+print(sum_numbers(1, 2, 3))       # 输出：6
+print(sum_numbers(10, 20, 30, 40)) # 输出：100
+```
+- 调用函数时，所有位置参数会被收集到 `args` 元组中。
+
+---
+
+### **2. `**kwargs`：接收任意数量的「关键字参数」**
+- **作用**：将传入的多个关键字参数（键值对）打包成一个**字典**。
+- **适用场景**：需要灵活处理命名参数的场景（比如配置选项）。
+
+#### **例子 2：基本用法**
+```python
+def print_info(**kwargs):
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+
+print_info(name="Alice", age=30, city="New York")
+# 输出：
+# name: Alice
+# age: 30
+# city: New York
+```
+
+---
+
+### **3. 混合使用 `*args` 和 `**kwargs`**
+在函数中，可以同时使用 `*args` 和 `**kwargs`，但必须按以下顺序定义：
+**顺序**：位置参数 → `*args` → 默认参数 → `**kwargs`
+
+#### **例子 3：综合使用**
+```python
+def example(a, b, *args, option=True, **kwargs):
+    print("固定参数:", a, b)
+    print("额外位置参数:", args)
+    print("选项参数:", option)
+    print("关键字参数:", kwargs)
+
+example(1, 2, 3, 4, option=False, name="Bob", age=25)
+```
+**输出**：
+```
+固定参数: 1 2
+额外位置参数: (3, 4)
+选项参数: False
+关键字参数: {'name': 'Bob', 'age': 25}
+```
+
+---
+
+### **4. 调用函数时使用 `*` 和 `**` 解包参数**
+`*` 和 `**` 也可以在调用函数时使用，用于解包列表/元组或字典。
+
+#### **例子 4：解包参数**
+```python
+def func(a, b, c):
+    print(f"a={a}, b={b}, c={c}")
+
+# 用 * 解包列表/元组
+numbers = [1, 2, 3]
+func(*numbers)  # 等效于 func(1, 2, 3)
+
+# 用 ** 解包字典
+params = {"a": 10, "b": 20, "c": 30}
+func(**params)  # 等效于 func(a=10, b=20, c=30)
+```
+
+---
+
+### **5. 常见误区与注意事项**
+1. **参数顺序必须正确**：
+   ```python
+   # 正确顺序
+   def func(a, b, *args, **kwargs): ...
+
+   # 错误顺序（会报错）
+   def func(a, **kwargs, *args): ...
+   ```
+
+2. **名称不一定叫 `args` 或 `kwargs`**：
+   ```python
+   def func(*numbers, **info): ...
+   ```
+
+3. **`*args` 后的参数必须用关键字传递**：
+   ```python
+   def func(a, *args, option):
+       print(a, args, option)
+
+   func(1, 2, 3, option=True)  # ✅
+   func(1, 2, 3, True)         # ❌ 报错（必须显式写 option=True）
+   ```
+
+---
+
+### **总结**
+| **工具**     | **作用**                     | **数据形式** | **适用场景**               |
+|--------------|------------------------------|--------------|----------------------------|
+| `*args`      | 接收任意位置参数             | 元组         | 处理不确定数量的输入值     |
+| `**kwargs`   | 接收任意关键字参数           | 字典         | 处理灵活命名的配置选项     |
+| `*` 解包     | 将列表/元组拆分为位置参数    | -            | 动态传递位置参数           |
+| `**` 解包    | 将字典拆分为关键字参数       | -            | 动态传递命名参数           |
+
+**核心口诀**：  
+定义函数时用 `*args` 和 `**kwargs` **收集参数**，调用函数时用 `*` 和 `**` **解包参数**。
+
+
+
 ### 1. **Python 中的生成器（Generator）是什么？它如何工作？**
 
 **回答**：
