@@ -1580,6 +1580,150 @@ Person('Alice', 30)
 - **`__repr__`**：用于返回给开发者看的、准确且详细的字符串表示，通常用于调试，返回的字符串应该能尽可能地表示出对象的构造方式。
 ---
 
+### debug
+
+在 Python 中调试代码有多种方法，以下是 **6 种常用调试技巧**，结合具体示例说明：
+
+---
+
+### **1. 用 `print()` 快速定位问题**
+**适用场景**：简单逻辑错误，快速查看变量值。
+```python
+def divide(a, b):
+    print(f"调试：a={a}, b={b}")  # 打印输入参数
+    result = a / b
+    return result
+
+divide(10, 0)  # 会报错 ZeroDivisionError
+```
+**输出**：
+```
+调试：a=10, b=0
+ZeroDivisionError: division by zero
+```
+通过打印发现 `b=0` 导致错误。
+
+---
+
+### **2. 使用 `pdb` 交互式调试器**
+**适用场景**：复杂逻辑的逐行调试。
+```python
+import pdb
+
+def factorial(n):
+    pdb.set_trace()  # 在此处设置断点
+    if n == 1:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+print(factorial(5))
+```
+**调试命令**：
+- `n`（执行下一行）
+- `s`（进入函数）
+- `c`（继续运行）
+- `p 变量名`（查看变量值）
+- `q`（退出调试）
+
+---
+
+### **3. 利用 IDE 断点调试（以 VS Code 为例）**
+**步骤**：
+1. 在代码行号左侧点击设置断点（红色圆点）。
+2. 按 `F5` 启动调试。
+3. 使用调试控制栏逐行执行：
+   - **继续 (F5)**：运行到下一个断点
+   - **单步跳过 (F10)**：执行当前行，不进入函数
+   - **单步调试 (F11)**：进入函数内部
+   - **查看变量窗口**：实时监控变量值
+
+![VS Code 调试界面](https://code.visualstudio.com/assets/docs/editor/debugging/debugging_hero.png)
+
+---
+
+### **4. 捕获并打印异常信息**
+**适用场景**：处理运行时异常。
+```python
+try:
+    x = 1 / 0
+except Exception as e:
+    print(f"错误类型：{type(e).__name__}")
+    print(f"错误详情：{e}")
+    print(f"错误位置：{e.__traceback__.tb_lineno} 行")
+```
+**输出**：
+```
+错误类型：ZeroDivisionError
+错误详情：division by zero
+错误位置：2 行
+```
+
+---
+
+### **5. 使用 `logging` 模块记录日志**
+**适用场景**：长期运行的程序或复杂系统。
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,  # 设置日志级别
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def process_data(data):
+    logging.debug(f"处理数据：{data}")
+    try:
+        result = data["value"] * 2
+    except KeyError:
+        logging.error("数据缺少 'value' 字段")
+        return None
+    return result
+
+process_data({})  # 触发错误
+```
+**输出**：
+```
+2023-10-01 12:00:00 - DEBUG - 处理数据：{}
+2023-10-01 12:00:00 - ERROR - 数据缺少 'value' 字段
+```
+
+---
+
+### **6. 使用 `assert` 断言检查条件**
+**适用场景**：验证代码逻辑假设。
+```python
+def calculate_discount(price, discount):
+    assert discount >= 0, "折扣不能为负数"
+    assert discount <= 1, "折扣不能超过 100%"
+    return price * (1 - discount)
+
+# 测试
+print(calculate_discount(100, 0.2))  # 正常
+print(calculate_discount(100, 1.5))  # 触发 AssertionError
+```
+
+---
+
+### **调试策略总结**
+| **方法**       | **适用场景**               | **优点**                     | **缺点**               |
+|----------------|--------------------------|-----------------------------|-----------------------|
+| `print()`      | 快速检查变量值            | 简单直接                    | 需手动删除/注释调试代码 |
+| `pdb`          | 复杂逻辑逐行调试          | 交互式灵活                  | 命令需学习            |
+| IDE 调试器     | 可视化逐行调试            | 图形化界面友好              | 依赖特定 IDE          |
+| `try/except`   | 捕获并分析异常            | 精准定位错误类型            | 需预先预测错误类型    |
+| `logging`      | 长期运行程序日志记录      | 支持多级别日志，可持久化    | 配置稍复杂            |
+| `assert`       | 验证代码假设条件          | 快速暴露逻辑错误            | 生产环境需关闭        |
+
+---
+
+### **调试技巧口诀**
+1. **先复现**：明确问题出现的条件。
+2. **缩小范围**：通过注释或断点定位问题代码段。
+3. **看错误栈**：从下往上阅读错误信息，找到最初触发点。
+4. **二分法排查**：注释一半代码，逐步缩小问题范围。
+5. **小步快跑**：修改后立即测试，避免一次改多处。
+
 ### 11. **Python 中的 `global` 和 `nonlocal` 关键字有什么区别？**
 
 **回答**：
