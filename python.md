@@ -2523,6 +2523,132 @@ Python 提供了许多高级特性，以下是它们的一些常见用途：
 
 这些特性使得 Python 成为一个非常强大且灵活的编程语言，能够适应不同类型的开发需求。
 
+
+## lambda
+
+---
+
+### **Python Lambda 函数详解及示例**
+
+**Lambda 函数**（匿名函数）是 Python 中用于快速定义简单函数的工具。其核心特点是：  
+- **匿名性**：无需显式命名，直接通过表达式定义。  
+- **简洁性**：仅支持单行逻辑，适用于简单操作。  
+- **灵活性**：常用于高阶函数（如 `map`、`filter`、`sorted`）的参数传递。
+
+---
+
+#### **1. 基本语法**
+```python
+lambda 参数1, 参数2, ... : 表达式
+```
+**特点**：
+- 没有 `return` 语句，表达式结果自动返回。
+- 不能包含多行代码或复杂逻辑（如循环、条件分支需用三元表达式）。
+
+---
+
+#### **2. 具体示例**
+
+##### **示例 1：基本数学运算**
+```python
+# 加法
+add = lambda a, b: a + b
+print(add(3, 5))  # 输出：8
+
+# 平方
+square = lambda x: x ** 2
+print(square(4))  # 输出：16
+```
+
+##### **示例 2：与高阶函数结合**
+```python
+# map：对列表中每个元素平方
+numbers = [1, 2, 3, 4]
+squared = list(map(lambda x: x ** 2, numbers))
+print(squared)  # 输出：[1, 4, 9, 16]
+
+# filter：过滤偶数
+evens = list(filter(lambda x: x % 2 == 0, numbers))
+print(evens)  # 输出：[2, 4]
+
+# sorted：按元组的第二个元素排序
+people = [("Alice", 30), ("Bob", 25), ("Charlie", 35)]
+sorted_people = sorted(people, key=lambda x: x[1])
+print(sorted_people)  # 输出：[('Bob', 25), ('Alice', 30), ('Charlie', 35)]
+```
+
+##### **示例 3：在字典中定义操作集**
+```python
+operations = {
+    "add": lambda a, b: a + b,
+    "subtract": lambda a, b: a - b,
+    "multiply": lambda a, b: a * b
+}
+
+print(operations["add"](10, 5))      # 输出：15
+print(operations["subtract"](10, 5)) # 输出：5
+```
+
+##### **示例 4：闭包与延迟绑定**
+```python
+def multiplier(n):
+    return lambda x: x * n  # 返回一个记住 n 的 lambda 函数
+
+double = multiplier(2)
+triple = multiplier(3)
+
+print(double(5))  # 输出：10
+print(triple(5))  # 输出：15
+```
+
+---
+
+#### **3. 注意事项**
+
+##### **变量捕获问题**
+在循环中创建 Lambda 时，需显式传递变量值，避免引用错误：
+```python
+# 错误写法：所有函数引用最终值 i=2
+funcs = [lambda x: x + i for i in range(3)]
+print([f(1) for f in funcs])  # 输出：[3, 3, 3]（预期是 [1, 2, 3]）
+
+# 正确写法：通过默认参数捕获当前值
+funcs = [lambda x, i=i: x + i for i in range(3)]
+print([f(1) for f in funcs])  # 输出：[1, 2, 3]
+```
+
+##### **可读性限制**
+Lambda 不适合复杂逻辑，以下情况应使用普通函数：
+```python
+# 复杂条件判断（需用普通函数）
+def check_number(x):
+    if x > 10:
+        return "High"
+    elif x > 5:
+        return "Medium"
+    else:
+        return "Low"
+
+# Lambda 等效写法（可读性差）
+check = lambda x: "High" if x > 10 else ("Medium" if x > 5 else "Low")
+```
+
+---
+
+#### **4. 总结**
+
+| **场景**               | **Lambda 适用性**       | **普通函数适用性**         |
+|------------------------|------------------------|--------------------------|
+| 简单数学运算           | ✅ 高效简洁             | ⚠️ 冗余                  |
+| 高阶函数参数（如 map） | ✅ 直接传递             | ⚠️ 需额外定义函数         |
+| 闭包与延迟执行         | ✅ 灵活                 | ✅ 同样适用               |
+| 复杂逻辑或多行代码     | ❌ 无法实现             | ✅ 必须使用               |
+
+**使用建议**：
+- **优先 Lambda**：简单、一次性使用的函数（如排序键、过滤条件）。
+- **避免 Lambda**：需要复用、复杂逻辑或需文档说明的函数。
+- **注意变量捕获**：在循环或闭包中显式传递变量值。
+
 # git
 
 Git 是一个非常强大且广泛使用的版本控制系统。它支持基本的版本管理功能，同时也提供了高级功能来处理复杂的开发需求。以下是 Git 的基本操作和高级操作。
