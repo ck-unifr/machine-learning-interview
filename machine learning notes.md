@@ -312,6 +312,137 @@ optimizer.step()
 
 **核心原则**：通过合理的初始化、网络结构设计和优化策略，保持梯度在反向传播中的稳定性。
 
+# 交叉熵
+交叉熵（Cross Entropy）是信息论和机器学习中的重要概念，主要用于衡量两个概率分布之间的差异。它在分类任务中常作为损失函数，帮助模型学习逼近真实分布。下面详细介绍其原理和应用。
+
+---
+
+### **1. 熵（Entropy）**
+**熵**描述了一个概率分布的不确定性。公式为：
+
+$$
+H(P) = -\sum_{x} P(x) \log P(x)
+$$
+
+- \(P(x)\) 是事件 \(x\) 发生的真实概率。
+- 熵越大，表示分布越不确定（如均匀分布）；熵越小，分布越确定（如one-hot编码）。
+
+**例子**：抛一枚均匀硬币，\(P(\text{正面})=0.5\)，熵为 \(H(P) = -0.5 \log 0.5 - 0.5 \log 0.5 = 1\) 比特。
+
+---
+
+### **2. 交叉熵（Cross Entropy）**
+**交叉熵**衡量用分布 \(Q\) 表示真实分布 \(P\) 所需的平均信息量。公式为：
+
+$$
+H(P, Q) = -\sum_{x} P(x) \log Q(x)
+$$
+
+- \(Q(x)\) 是模型预测的概率。
+- 交叉熵越小，说明 \(Q\) 越接近 \(P\)；当 \(Q=P\) 时，交叉熵等于熵 \(H(P)\)。
+
+---
+
+### **3. 交叉熵与KL散度**
+交叉熵和KL散度（Kullback-Leibler Divergence）密切相关：
+
+$$
+H(P, Q) = H(P) + D_{\text{KL}}(P \parallel Q)
+$$
+
+- $D_{\text{KL}}(P \parallel Q)$ 表示 \(P\) 和 \(Q\) 的差异，公式为：
+
+$$
+D_{\text{KL}}(P \parallel Q) = \sum_{x} P(x) \log \frac{P(x)}{Q(x)}
+$$
+
+- 最小化交叉熵等价于最小化KL散度（因为 \(H(P)\) 是常数）。
+
+---
+
+### **4. 机器学习中的应用**
+在分类任务中，真实分布 \(P\) 通常是**one-hot编码**（如标签 \(y=3\) 对应 \(P=[0,0,1,0]\)），模型输出预测分布 \(Q\)。此时交叉熵简化为：
+
+$$
+H(P, Q) = -\log Q(y_{\text{true}})
+$$
+
+**例子**：  
+- 真实标签 \(y=2\)（即 $P=[0,1,0]$），模型预测 $$ Q=[0.1, 0.7, 0.2]$$。  
+- 交叉熵损失为：$$-\log 0.7 \approx 0.3567$$。
+
+---
+
+### **5. 为什么用交叉熵作为损失函数？**
+1. **梯度友好**：交叉熵对参数的梯度更明显，避免梯度消失（相比均方误差）。  
+2. **等价于极大似然估计**：最小化交叉熵等价于最大化对数似然函数。  
+3. **直观解释**：直接惩罚预测概率与真实标签的偏离。
+
+---
+
+### **6. 多样本的交叉熵损失**
+对 \(N\) 个样本，损失函数为平均交叉熵：
+
+$$
+\text{Loss} = -\frac{1}{N} \sum_{i=1}^{N} \log Q(y_{\text{true}}^{(i)})
+$$
+
+---
+
+### **7. 与极大似然的关系**
+最大化似然函数 \(L = \prod_{i=1}^N Q(y_{\text{true}}^{(i)})\) 等价于最小化交叉熵：
+
+$$
+\log L = \sum_{i=1}^N \log Q(y_{\text{true}}^{(i)}) \quad \Rightarrow \quad -\frac{1}{N} \log L = \text{Loss}
+$$
+
+---
+
+### **8. 总结**
+- **交叉熵**衡量两个分布的差异，值越小说明预测越准。  
+- 在分类任务中，它比均方误差更高效，梯度更利于优化。  
+- 数学上等价于最小化KL散度或最大化似然估计。
+
+# 困惑度(Perplexity)
+
+语言模型的困惑度（Perplexity）是衡量模型预测文本能力的重要指标。简单来说，它表示模型对一段文本的“困惑程度”：困惑度越低，模型对文本的预测越准确；困惑度越高，模型越“不确定”。
+
+### 通俗理解
+想象你正在玩一个猜词游戏，每次要根据前面的词猜下一个词。如果你总能迅速猜中，说明你对语言规律掌握得很好；如果总是猜错或犹豫不决，说明你对规则不熟悉。困惑度类似这个游戏的“难度评分”——分数越低，说明模型越擅长预测。
+
+### 数学定义
+困惑度的核心思想是**用概率评估模型的预测能力**。假设测试文本有 \(N\) 个词，模型对每个词的条件概率为 \(P(w_i | w_1, w_2, ..., w_{i-1})\)，则困惑度计算步骤如下：
+
+1. **计算每个词的对数概率**：取所有词条件概率的自然对数（\(\log\)）。
+2. **求平均**：将这些对数概率相加后除以词数 \(N\)，得到平均对数概率。
+3. **取指数**：对平均对数概率取负数后，再计算指数（\(e^x\)）。
+
+公式表示为：
+$$
+\text{Perplexity} = \exp\left(-\frac{1}{N} \sum_{i=1}^{N} \log P(w_i | w_1, ..., w_{i-1})\right)
+$$
+
+### 例子说明
+假设模型预测三个词，每个词的条件概率均为 0.5（即模型每次“猜对”的概率是50%）：
+- 对数概率：\(\log(0.5) ≈ -0.693\)（自然对数）。
+- 平均对数概率：\((-0.693 \times 3)/3 = -0.693\)。
+- 困惑度：\(\exp(0.693) ≈ 2\)。
+
+这意味着，模型在预测时平均需要在两个等概率的选项中做选择。若每个词的概率提升到 1，困惑度则为 1（完美预测）。
+
+### 应用场景
+1. **模型比较**：困惑度越低，模型越好。例如，模型A困惑度为50，模型B为30，则B更优。
+2. **训练监控**：训练过程中困惑度下降，说明模型在学习。
+3. **数据评估**：困惑度高可能反映测试数据与训练数据差异大（如专业术语过多）。
+
+### 注意事项
+- **局限性**：困惑度仅反映概率预测能力，无法直接衡量生成文本的流畅性或多样性。
+- **数值问题**：概率乘积易导致数值下溢，实际计算时需用对数相加。
+- **基数影响**：使用自然对数（底为\(e\)）或2为底会影响具体数值，但相对大小一致。
+
+### 总结
+困惑度是语言模型的“不确定度评分”，通过概率计算模型预测文本的能力。它像一把尺子，能量化模型的预测水平，但需结合其他指标全面评估模型表现。记住：**困惑度越低，模型越聪明！**
+
 
 # RAG评测
 
@@ -9312,9 +9443,26 @@ https://machinelearningmastery.com/calculate-feature-importance-with-python/
 
 - 【深入浅出】DeepSeek V3模型架构创新点
 https://www.bilibili.com/video/BV1uuNWeXE2G/?spm_id_from=333.999.0.0&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+
 - RAG
 https://luxiangdong.com/2023/11/06/rerank/
 https://www.bilibili.com/video/BV17i421h7wL/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+微软推出GraphRag的进化版LazyGraphRag，大大降低graphRag的使用成本，令人期待。
+https://www.bilibili.com/video/BV1sMz3YyEqf/?spm_id_from=333.999.0.0&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+Building a fully local "deep researcher" with DeepSeek-R1
+https://www.youtube.com/watch?v=sGUjmyfof4Q
+
+ LangGraph+deepseek-r1+FastAPI+Gradio实现拥有记忆的流量包推荐智能客服web端用例,同时也支持gpt、国产大模型、Ollama本地开源大模型
+ https://www.youtube.com/watch?v=meuLnVCzEM4
+ https://github.com/NanGePlus/LangGraphChatBot
+
+RAG And Long Context LLMs
+https://docs.google.com/presentation/d/1mJUiPBdtf58NfuSEQ7pVSEQ2Oqmek7F1i4gBwR6JDss/edit?pli=1#slide=id.g26c0cb8dc66_0_57
+
+DeepSeek + RAGFlow 构建个人知识库
+https://www.bilibili.com/video/BV1WiP2ezE5a/?spm_id_from=333.999.0.0&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+
+
 - 位置编码
 https://www.bilibili.com/video/BV1AD421g7hs/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
 https://www.bilibili.com/video/BV1ErPkeSEHn/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
@@ -9339,6 +9487,9 @@ https://www.bilibili.com/video/BV1pgHXeYE8M/?spm_id_from=333.337.search-card.all
 - Deepseek v3 技术报告万字硬核解读
 https://zhuanlan.zhihu.com/p/16323685381
 
+- 【Whalepaper】最细解读！DeepSeek- R1及相关论文7篇
+https://www.bilibili.com/video/BV1Lw99YSEYb/?spm_id_from=333.999.0.0&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+
 - Deepseek 部署
 https://www.bilibili.com/video/BV1atfQYQE9P/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
 https://www.youtube.com/watch?v=Lb5D892-2HY
@@ -9348,3 +9499,28 @@ https://www.bilibili.com/video/BV13HNae2ENF/?spm_id_from=333.337.search-card.all
 https://huggingface.co/docs/transformers/training
 https://www.bilibili.com/video/BV1pfKNe8E7F/?spm_id_from=333.788.recommend_more_video.8&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
 https://medium.com/enterprise-rag/introducing-patientseek-the-first-open-source-med-legal-deepseek-reasoning-model-74f98e9608ae
+https://www.aivi.fyi/fine-tuning/finetuning-deepseek-r1
+https://www.bilibili.com/video/BV1cHPLeUEfs/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+https://www.bilibili.com/video/BV1sR9fYUE8z/?vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+开发人员如何微调大模型并暴露接口给后端调用
+https://www.bilibili.com/video/BV1R6P7eVEtd?vd_source=169a4f5150fe4c5a2d521fa2b5efa167&spm_id_from=333.788.player.player_end_recommend
+30分钟学会DeepSeek R1模型Lora微调训练，环境配置+模型微调+模型部署+效果展示详细教程
+https://www.bilibili.com/video/BV1cHPLeUEfs/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+train-deepseek-r1
+https://github.com/FareedKhan-dev/train-deepseek-r1?tab=readme-ov-file#stage-1-sft-trainer-configs-for-r1
+DeepSeek R1架构和训练过程图解
+https://cloud.tencent.com/developer/article/2495737
+练习两天半，从零实现DeepSeek-R1（基于Qwen2.5-0.5B和规则奖励模型，GRPO），从原理讲解到代码实现，解开DeepSeek-R1的神秘面纱
+https://www.bilibili.com/video/BV18uNWeXE1t/?spm_id_from=333.337.search-card.all.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+练习两分半，使用DeepSeek-R1蒸馏训练自己的本地小模型（Qwen2.5-0.5B），原理流程全讲解，模型数据全给你
+https://www.bilibili.com/video/BV1ekN2ebE68/?spm_id_from=333.999.0.0&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+https://mp.weixin.qq.com/s/P12FAEFHQ_6aRPHlXKGd-w?token=431651514&lang=zh_CN
+想微调特定领域的 DeepSeek，数据集究竟要怎么搞（理论篇）？
+https://www.bilibili.com/video/BV1z9RLYWEjq/?spm_id_from=333.1007.tianma.1-1-1.click&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+Fine Tune DeepSeek R1 | Build a Medical Chatbot
+https://www.youtube.com/watch?v=qcNmOItRw4U
+
+
+- llm 面试
+https://www.bilibili.com/video/BV1jhk3Y6E6c/?spm_id_from=333.788.recommend_more_video.9&vd_source=169a4f5150fe4c5a2d521fa2b5efa167
+https://wdndev.github.io/llm_interview_note/#/
