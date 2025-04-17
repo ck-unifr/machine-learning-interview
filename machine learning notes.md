@@ -390,7 +390,7 @@ $$
 ---
 
 ### **7. 与极大似然的关系**
-最大化似然函数 \(L = \prod_{i=1}^N Q(y_{\text{true}}^{(i)})\) 等价于最小化交叉熵：
+最大化似然函数 $$ L = \prod_{i=1}^N Q(y_{\text{true}}^{(i)}) $$ 等价于最小化交叉熵：
 
 $$
 \log L = \sum_{i=1}^N \log Q(y_{\text{true}}^{(i)}) \quad \Rightarrow \quad -\frac{1}{N} \log L = \text{Loss}
